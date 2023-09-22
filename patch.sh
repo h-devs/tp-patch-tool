@@ -67,14 +67,33 @@ echo "Checking H264 patch..."
 PATCH_H264=0
 
 ## check if patched
+PUBLIC_IP=$(curl -s ipecho.net/plain)
 if cat /etc/janus/janus.jcfg | grep -B 3 -A 2 stun_server; then
   echo "Stun server is already set."
+  if [ -n "$PUBLIC_IP" ]; then
+    UPDATE_NAT=0
+    echo "Your public IP: $PUBLIC_IP"
+    if cat /etc/janus/janus.jcfg | grep $PUBLIC_IP > /dev/null; then
+      if cat /etc/janus/janus.jcfg | grep "#nat_1_1_mapping" > /dev/null; then
+        prompt_y "NAT is disabled. Do you want to enable it?" && UPDATE_NAT=1
+      fi
+    elif cat /etc/janus/janus.jcfg | grep "#nat_1_1_mapping" > /dev/null; then
+      prompt_y "NAT is disabled. Do you want to enable it?" && UPDATE_NAT=1
+    elif cat /etc/janus/janus.jcfg | grep "nat_1_1_mapping" > /dev/null; then
+      prompt_y "NAT mapping address is incorrect. Do you want to fix it?" && UPDATE_NAT=1
+    fi
+    if [ $UPDATE_NAT == 1 ]; then
+      sed -i 's/#nat_1_1_mapping/nat_1_1_mapping/' /etc/janus/janus.jcfg
+      sed -i -E "s/nat_1_1_mapping = .+$/nat_1_1_mapping = \"$PUBLIC_IP\"/" /etc/janus/janus.jcfg
+      cat /etc/janus/janus.jcfg | grep -B 3 -A 2 stun_server
+      prompt_y "Do you want to restart janus service?" && systemctl restart janus
+    fi
+  fi
 else
-  prompt_y "Do you want to apply patch?" && PATCH_H264=1
+  prompt_y "Do you want to apply H264 patch?" && PATCH_H264=1
 fi
 
 if [ $PATCH_H264 == 1 ]; then
-  PUBLIC_IP=$(curl ipecho.net/plain)
   echo "
 
 # STUN
@@ -84,8 +103,11 @@ nat: {
     stun_port = 19302
 }
 " >> /etc/janus/janus.jcfg
+  if [ -n "$PUBLIC_IP" ]; then
+    sed -i 's/#nat_1_1_mapping/nat_1_1_mapping/' /etc/janus/janus.jcfg
+  fi
   cat /etc/janus/janus.jcfg | grep -B 3 -A 2 stun_server
-  systemctl restart janus
+  prompt_y "Do you want to restart janus service?" && systemctl restart janus
 fi
 
 
