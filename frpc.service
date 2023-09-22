@@ -1,0 +1,25 @@
+[Unit]
+Description=Frp Client
+Requires=network.target
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/root/frp
+ExecStart=/root/frp/frpc -c frpc.ini
+Restart=always
+RestartSec=10s
+TimeoutStartSec=0
+StartLimitInterval=60
+StartLimitBurst=86400
+
+ProtectSystem=full
+PrivateDevices=yes
+PrivateTmp=yes
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
+
