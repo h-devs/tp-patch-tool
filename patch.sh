@@ -207,6 +207,33 @@ else
 fi
 
 
+# ui patch
+
+echo "================================================="
+echo "Checking Web UI patch..."
+PATCH_WEB=0
+
+if cat /opt/tinypilot/app/templates/index.html | grep TinyPilot > /dev/null; then
+  prompt_y "Web UI is not patched. Do you want to apply patch?" && PATCH_WEB=1
+elif cat /opt/tinypilot/app/templates/custom-elements/menu-bar.html | grep '<div class="logo">' > /dev/null; then
+  prompt_y "Web UI is not patched. Do you want to apply patch?" && PATCH_WEB=1
+else
+  echo "Web UI is already patched."
+fi
+
+if [ $PATCH_WEB == 1 ]; then
+  sed -i 's/TinyPilot/Screen/' /opt/tinypilot/app/templates/index.html
+  sed -i 's/TinyPilot/Screen/' /opt/tinypilot/app/templates/dedicated-window-placeholder.html
+  sed -i 's/<div class="brand logo">/<div class="brand logo" style="display:none">/' /opt/tinypilot/app/templates/login.html
+  sed -i 's/TinyPilot - //' /opt/tinypilot/app/templates/login.html
+  sed -i 's/TinyPilot //' /opt/tinypilot/app/templates/login.html
+  sed -i 's/<div class="logo">/<div class="logo" style="display:none">/' /opt/tinypilot/app/templates/custom-elements/menu-bar.html
+  sed -i 's/TinyPilot logo/logo/' /opt/tinypilot/app/templates/custom-elements/menu-bar.html
+  sed -i 's/TinyPilot-/Screenshot-/' /opt/tinypilot/app/templates/custom-elements/menu-bar.html
+  echo "Web UI successfully patched."
+fi
+
+
 # ssh key patch
 
 echo "================================================="
