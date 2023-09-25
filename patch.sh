@@ -122,16 +122,22 @@ PATCH_EDID=0
 
 EDID="/home/ustreamer/edids/tc358743-edid.hex"
 xxd -r -p $EDID | xxd
-CHECKSUM1=$(sed "8q;d" $EDID | tail -c 3)
-CHECKSUM2=$(tail -1 $EDID | tail -c 3)
-echo "Checksum: $CHECKSUM1$CHECKSUM2"
+#CHECKSUM1=$(xxd -r -p $EDID | xxd | awk 'NR==8 {print substr($0,48,2)}')
+#CHECKSUM2=$(xxd -r -p $EDID | xxd | awk 'NR==16 {print substr($0,48,2)}')
+HEXSTR=$(cat $EDID | tr -d "\n")
+CHECKSUM=${HEXSTR:254:2}${HEXSTR: -2}
+echo "Checksum: $CHECKSUM"
 
-if [ "$CHECKSUM1$CHECKSUM2" == "e28e" ]; then
+if [ "$CHECKSUM" == "e28e" ]; then
   prompt "EDID already patched. Do you want to apply patch anyway?" && PATCH_EDID=1
-elif [ "$CHECKSUM1$CHECKSUM2" != "aa8e" ]; then
-  prompt "Checksum mismatch! Do you want to apply patch anyway?" && PATCH_EDID=1
+elif [ "$CHECKSUM" == "3528" ]; then
+  prompt "EDID for v2.5.3 detected! Do you want to apply patch?" && PATCH_EDID=1
+elif [ "$CHECKSUM" == "494e" ]; then
+  prompt_y "EDID for v2.5.4 detected! Do you want to apply patch?" && PATCH_EDID=1
+elif [ "$CHECKSUM" == "aa8e" ]; then
+  prompt_y "EDID for v2.6.0+ detected! Do you want to apply patch?" && PATCH_EDID=1
 else
-  prompt_y "Checksum mismatch! Do you want to apply patch?" && PATCH_EDID=1
+  prompt "Checksum mismatch! Do you want to apply patch anyway?" && PATCH_EDID=1
 fi
 
 if [ $PATCH_EDID == 1 ]; then
