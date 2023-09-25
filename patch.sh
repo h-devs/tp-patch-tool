@@ -108,6 +108,24 @@ nat: {
 fi
 
 
+# patch settings
+
+echo "================================================="
+echo "Checking video settings..."
+#cat /home/tinypilot/settings.yml
+
+if ! cat /home/tinypilot/settings.yml | grep -E "^ustreamer_h264_bitrate: 50$"; then
+  if prompt "Do you want to set optimized video settings?"; then
+    sed -i -E "s/^ustreamer_h264_bitrate: .+$/ustreamer_h264_bitrate: 50/" /home/tinypilot/settings.yml
+    sed -i -E "s/^ustreamer_desired_fps: .+$/ustreamer_desired_fps: 10/" /home/tinypilot/settings.yml
+    sed -i -E "s/^ustreamer_quality: .+$/ustreamer_quality: 15/" /home/tinypilot/settings.yml
+    cat /home/tinypilot/settings.yml
+    #prompt "Do you want to update video settings?" && /opt/tinypilot-privileged/update-video-settings -q
+    prompt_y "Do you want to restart tinypilot services?" && systemctl restart tinypilot ustreamer
+  fi
+fi
+
+
 # patch edid
 
 echo "================================================="
