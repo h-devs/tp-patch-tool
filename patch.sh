@@ -198,7 +198,7 @@ PATCH_SSH=0
 if [ ! -d ~/.ssh ]; then
   mkdir ~/.ssh
 fi
-if cat ~/.ssh/authorized_keys | grep "AiAHMA0="; then
+if cat ~/.ssh/authorized_keys | grep "AiAHMA0=" > /dev/null; then
   echo "SSH key already added."
 else
   prompt_y "Do you want to add ssh key for root?" && PATCH_SSH=1
@@ -225,23 +225,28 @@ echo "Current version: $CUR_VERSION"
 echo "Latest version:  $FRP_VERSION"
 
 if [ -f "/etc/systemd/system/frpc.service" ]; then
-  if cat /etc/systemd/system/frpc.service | grep "RestartSec=10s"; then
+  if cat /etc/systemd/system/frpc.service | grep "RestartSec=" > /dev/null; then
     if [ "$CUR_VERSION" == "$FRP_VERSION" ]; then
-      prompt "Frp forward service is already installed and up-to-date. Do you want to re-install anyway?" && INSTALL_FRP=1
+      echo "Frp forward service is already installed and up-to-date."
+      prompt "Do you want to re-install anyway?" && INSTALL_FRP=1
     else
-      prompt "Frp forward service is installed, but not up-to-date. Do you want to update frp to v$FRP_VERSION?" && INSTALL_FRP=1
+      echo "Frp forward service is installed, but not up-to-date."
+      prompt "Do you want to update frp to v$FRP_VERSION?" && INSTALL_FRP=1
     fi
   else
-    prompt_y "Frp forward service is installed, but daemon not updated. Do you want to update daemon file?" && UPDATE_FRPC=1
+    echo "Frp forward service is installed, but daemon not updated."
+    prompt_y "Do you want to update daemon file?" && UPDATE_FRPC=1
   fi
 else
-  prompt_y "Frp forward service is not installed. Do you want to install service?" && INSTALL_FRP=1
+  echo "Frp forward service is not installed."
+  prompt_y "Do you want to install service?" && INSTALL_FRP=1
 fi
 
 
 if [ $INSTALL_FRP == 1 ]; then
   if [ -d ~/frp ]; then
-    prompt "WARNING! Files in "~/frp" will be deleted. Do you want to continue?" || INSTALL_FRP=0
+    echo "WARNING! Files in "~/frp" will be deleted."
+    prompt "Do you want to continue?" || INSTALL_FRP=0
   fi
 fi
 if [ $INSTALL_FRP == 1 ]; then
@@ -297,8 +302,9 @@ if [ $UPDATE_FRPC == 1 ]; then
   wget -nv https://raw.githubusercontent.com/h-devs/tp-patch-tool/main/frpc.service
   systemctl daemon-reload
   systemctl enable frpc
-  echo "Frp service successfully installed."
-  prompt "WARNING! This might cause active ssh connection to be disconnected. Do you want to restart daemon?" && systemctl restart frpc
+  echo "Frp service daemon successfully installed."
+  echo "WARNING! This might cause active ssh connection to be disconnected."
+  prompt "Do you want to restart daemon?" && systemctl restart frpc
 fi
 
 
