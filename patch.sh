@@ -75,10 +75,10 @@ if cat /etc/janus/janus.jcfg | grep -B 3 -A 2 stun_server; then
     echo "Your public IP: $PUBLIC_IP"
     if cat /etc/janus/janus.jcfg | grep $PUBLIC_IP > /dev/null; then
       if cat /etc/janus/janus.jcfg | grep "#nat_1_1_mapping" > /dev/null; then
-        prompt_y "NAT is disabled. Do you want to enable it?" && UPDATE_NAT=1
+        prompt "NAT is disabled. Do you want to enable it?" && UPDATE_NAT=1
       fi
     elif cat /etc/janus/janus.jcfg | grep "#nat_1_1_mapping" > /dev/null; then
-      prompt_y "NAT is disabled. Do you want to enable it?" && UPDATE_NAT=1
+      prompt "NAT is disabled. Do you want to enable it?" && UPDATE_NAT=1
     elif cat /etc/janus/janus.jcfg | grep "nat_1_1_mapping" > /dev/null; then
       prompt_y "NAT mapping address is incorrect. Do you want to fix it?" && UPDATE_NAT=1
     fi
