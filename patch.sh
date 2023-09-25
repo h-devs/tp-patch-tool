@@ -34,12 +34,6 @@ prompt_y() {
 }
 
 
-# default parameters
-
-[ -z "$FRP_VERSION" ] && FRP_VERSION="0.51.3"
-[ -z "$FRP_SERVER_PORT" ] && FRP_SERVER_PORT=57000
-
-
 # check os version
 
 . /etc/os-release
@@ -219,21 +213,38 @@ fi
 # frp forward
 
 echo "================================================="
-echo "Checking frp forward..."
-DOWNLOAD_FRP=0
-INSTALL_FRPC=0
+echo "Checking frp forward service..."
+INSTALL_FRP=0
+UPDATE_FRPC=0
+
+CUR_VERSION=$(~/frp/frpc --version 2> /dev/null)
+[ -z "$FRP_VERSION" ] && FRP_VERSION=$(curl -s "https://api.github.com/repos/fatedier/frp/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+[ -z "$FRP_VERSION" ] && FRP_VERSION="0.51.3"
+[ -z "$FRP_SERVER_PORT" ] && FRP_SERVER_PORT=57000
+echo "Current version: $CUR_VERSION"
+echo "Latest version:  $FRP_VERSION"
 
 if [ -f "/etc/systemd/system/frpc.service" ]; then
   if cat /etc/systemd/system/frpc.service | grep "RestartSec=10s"; then
-    prompt "Frp service is already installed. Do you want to re-install anyway?" && DOWNLOAD_FRP=1
+    if [ "$CUR_VERSION" == "$FRP_VERSION" ]; then
+      prompt "Frp forward service is already installed and up-to-date. Do you want to re-install anyway?" && INSTALL_FRP=1
+    else
+      prompt "Frp forward service is installed, but not up-to-date. Do you want to update frp to v$FRP_VERSION?" && INSTALL_FRP=1
+    fi
   else
-    prompt_y "Frp service is installed, but not updated. Do you want to update?" && INSTALL_FRPC=1
+    prompt_y "Frp forward service is installed, but daemon not updated. Do you want to update daemon file?" && UPDATE_FRPC=1
   fi
 else
-  prompt_y "Do you want to install frp forward service?" && DOWNLOAD_FRP=1
+  prompt_y "Frp forward service is not installed. Do you want to install service?" && INSTALL_FRP=1
 fi
 
-if [ $DOWNLOAD_FRP == 1 ]; then
+
+if [ $INSTALL_FRP == 1 ]; then
+  if [ -d ~/frp ]; then
+    prompt "WARNING! Files in "~/frp" will be deleted. Do you want to continue?" || INSTALL_FRP=0
+  fi
+fi
+if [ $INSTALL_FRP == 1 ]; then
   set -e
 
   cd ~/
@@ -248,12 +259,21 @@ if [ $DOWNLOAD_FRP == 1 ]; then
   wget -nv https://raw.githubusercontent.com/h-devs/tp-patch-tool/main/frpc.ini
 
   # update server address
-  while true; do
-    read -p "Enter frps address: " FRP_SERVER_IP
-    ping -c 1 $FRP_SERVER_IP > /dev/null && break
-    echo "Server address is invalid."
-  done
-  sed -i -E "s/^server_addr = .+$/server_addr = $FRP_SERVER_IP/" frpc.ini
+  if [ -z "$FRP_SERVER_ADDR" ]; then
+    while true; do
+      read -p "Enter frps address: " FRP_SERVER_ADDR
+      ping -c 1 "$FRP_SERVER_ADDR" > /dev/null && break
+      echo "Server address is invalid."
+    done
+  fi
+  if [ -z "$FRP_SERVER_PORT" ]; then
+    while true; do
+      read -p "Enter frps port: " FRP_SERVER_PORT
+      [[ $FRP_SERVER_PORT -ge 1 && $FRP_SERVER_PORT -le 65535 ]] && break
+      echo "Server port is invalid."
+    done
+  fi
+  sed -i -E "s/^server_addr = .+$/server_addr = $FRP_SERVER_ADDR/" frpc.ini
   sed -i -E "s/^server_port = .+$/server_port = $FRP_SERVER_PORT/" frpc.ini
   
   # update identifier
@@ -267,10 +287,10 @@ if [ $DOWNLOAD_FRP == 1 ]; then
   sed -i "s/01$/$TP_ID/" frpc.ini
   cat frpc.ini
 
-  read -p "Press any key to continue setup frp service..."
-  INSTALL_FRPC=1
+  read -p "Press any key to continue setup frpc service daemon..."
+  UPDATE_FRPC=1
 fi
-if [ $INSTALL_FRPC == 1 ]; then
+if [ $UPDATE_FRPC == 1 ]; then
   # install frpc service
   cd /etc/systemd/system/
   rm -f frpc.service
