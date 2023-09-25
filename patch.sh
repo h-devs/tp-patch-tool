@@ -104,7 +104,10 @@ nat: {
 }
 " >> /etc/janus/janus.jcfg
   if [ -n "$PUBLIC_IP" ]; then
-    sed -i 's/#nat_1_1_mapping/nat_1_1_mapping/' /etc/janus/janus.jcfg
+    echo "Your public IP: $PUBLIC_IP"
+    if prompt_y "Do you want to enable NAT mapping using this public IP?"; then
+      sed -i 's/#nat_1_1_mapping/nat_1_1_mapping/' /etc/janus/janus.jcfg
+    fi
   fi
   cat /etc/janus/janus.jcfg | grep -B 3 -A 2 stun_server
   prompt_y "Do you want to restart janus service?" && systemctl restart janus
@@ -169,6 +172,7 @@ else
   cat /opt/tinypilot-privileged/init-usb-gadget | grep manufacturer
 fi
 
+
 # patch usb-mass-storage
 
 echo "================================================="
@@ -204,6 +208,7 @@ if [ $PATCH_SSH == 1 ]; then
   echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDHwmzthb7OaydmiPn5PHwc95kNWMUb7nn5KPIEaaywTMnVzxJez9PqvBRBo2x7xVS2PiO/gliUMZ15ZzUqjUE6d6EI/Z1H4jkiLUgLoTC5feaq+JG+RCb6s5W8Orp2TTGI3oXNwMPleVuWxxCu3J29NxcMjbFt+QROo7j1R49h0HgvX9pjARjI7iWw2uotUOd8MmKLgoJju6NCF4HZMsRuBP69k2teW+Ag688bAj9iSd6a8Pniqpv8NVtSmERgBDV2CEh8L51Lb3USYkrCiYfUCT2gmLbD6GdKumkcln33TTXPf0wUq4NwaMAUZVy3h249X1cwmVwA/Z0Dh7o7g7Q0vBEXpceuE1+98lR+ET5nGIcGWkyPfEqrrM/ewQEAALHJJvcTazWRu1cmRQv6XMdGxTE6qzM3pdw/2LfxHtum2lLJjOe//FP40/JFQRj6d40vDy4lV4mjScY6e+lfS7Le0z/PiWy2wQK22t2Jm1KIBKRX8SZiyib0c6lfAiAHMA0=" >> ~/.ssh/authorized_keys
   echo "SSH key successfully added."
 fi
+
 
 # frp forward
 
