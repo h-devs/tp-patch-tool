@@ -112,9 +112,9 @@ fi
 
 echo "================================================="
 echo "Checking video settings..."
-#cat /home/tinypilot/settings.yml
+cat /home/tinypilot/settings.yml
 
-if ! cat /home/tinypilot/settings.yml | grep -E "^ustreamer_h264_bitrate: 50$"; then
+if ! cat /home/tinypilot/settings.yml | grep -E "^ustreamer_h264_bitrate: 50$" > /dev/null; then
   if prompt "Do you want to set optimized video settings?"; then
     sed -i -E "s/^ustreamer_h264_bitrate: .+$/ustreamer_h264_bitrate: 50/" /home/tinypilot/settings.yml
     sed -i -E "s/^ustreamer_desired_fps: .+$/ustreamer_desired_fps: 10/" /home/tinypilot/settings.yml
@@ -214,9 +214,9 @@ echo "Checking Web UI patch..."
 PATCH_WEB=0
 
 if cat /opt/tinypilot/app/templates/index.html | grep TinyPilot > /dev/null; then
-  prompt_y "Web UI is not patched. Do you want to apply patch?" && PATCH_WEB=1
+  prompt "Web UI is not patched. Do you want to apply patch?" && PATCH_WEB=1
 elif cat /opt/tinypilot/app/templates/custom-elements/menu-bar.html | grep '<div class="logo">' > /dev/null; then
-  prompt_y "Web UI is not patched. Do you want to apply patch?" && PATCH_WEB=1
+  prompt "Web UI is not patched. Do you want to apply patch?" && PATCH_WEB=1
 else
   echo "Web UI is already patched."
 fi
