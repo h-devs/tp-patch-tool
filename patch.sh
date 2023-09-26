@@ -92,8 +92,8 @@ if [ $PATCH_H264 == 1 ]; then
 
 # STUN
 nat: {
-    #nat_1_1_mapping = "$PUBLIC_IP"
-    stun_server = "stun.l.google.com"
+    #nat_1_1_mapping = \"$PUBLIC_IP\"
+    stun_server = \"stun.l.google.com\"
     stun_port = 19302
 }
 " >> /etc/janus/janus.jcfg
