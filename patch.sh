@@ -45,7 +45,7 @@ fi
 
 # check version
 
-REQ_VERSION="2.6.1"
+REQ_VERSION="2.6.2"
 VERSION=$(cat /opt/tinypilot/VERSION)
 echo "TP version: $VERSION"
 
@@ -103,6 +103,16 @@ nat: {
       sed -i 's/#nat_1_1_mapping/nat_1_1_mapping/' /etc/janus/janus.jcfg
     fi
   fi
+  if ! cat /home/tinypilot/settings.yml | grep -E "^janus_stun_server:" > /dev/null; then
+    echo "janus_stun_server: stun.l.google.com" >> /home/tinypilot/settings.yml
+  elif ! cat /home/tinypilot/settings.yml | grep -E "^janus_stun_server: stun.l.google.com$" > /dev/null; then
+    sed -i -E "s/^janus_stun_server: .+$/janus_stun_server: stun.l.google.com/" /home/tinypilot/settings.yml
+  fi
+  if ! cat /home/tinypilot/settings.yml | grep -E "^janus_stun_port:" > /dev/null; then
+    echo "janus_stun_port: 19302" >> /home/tinypilot/settings.yml
+  elif ! cat /home/tinypilot/settings.yml | grep -E "^janus_stun_port: 19302$" > /dev/null; then
+    sed -i -E "s/^janus_stun_port: .+$/janus_stun_port: 19302/" /home/tinypilot/settings.yml
+  fi
   cat /etc/janus/janus.jcfg | grep -B 3 -A 2 stun_server
   prompt_y "Do you want to restart janus service?" && systemctl restart janus
 fi
@@ -124,7 +134,6 @@ if ! cat /home/tinypilot/settings.yml | grep -E "^ustreamer_h264_bitrate: 50$" >
     prompt_y "Do you want to restart tinypilot services?" && systemctl restart tinypilot ustreamer
   fi
 fi
-
 
 # patch edid
 
